@@ -45,6 +45,7 @@ namespace SmartEduSolutions.DataControl.Services
                                         Role = firstJoinUserClass.Role,
                                         IdUsers = firstJoinUserClass.Users_IdUsers,
                                     })
+                                    .OrderByDescending(x => x.IdClassrooms)
                                     .Where(temp => temp.IdUsers.Equals(userId));
 
                 return await Task.FromResult(data);
@@ -83,6 +84,7 @@ namespace SmartEduSolutions.DataControl.Services
                                         Role = firstJoinUserClass.Role,
                                         IdUsers = firstJoinUserClass.Users_IdUsers,
                                     })
+                                    .OrderByDescending(x => x.IdUserHasClassroom)
                                     .Where(temp => temp.IdUsers.Equals(userId))
                                     .FirstOrDefault();
 

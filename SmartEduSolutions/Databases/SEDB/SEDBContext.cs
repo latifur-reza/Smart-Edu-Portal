@@ -23,6 +23,7 @@ namespace SmartEduSolutions.Databases
         public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<Classrooms> Classrooms { get; set; }
         public virtual DbSet<User_has_Classroom> User_has_Classroom { get; set; }
+        public virtual DbSet<Assignments> Assignments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

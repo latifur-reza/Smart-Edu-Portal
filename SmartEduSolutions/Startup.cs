@@ -18,6 +18,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SmartEduSolutions.Databases.SEDB;
+using Microsoft.AspNetCore.Identity;
+using SmartEduSolutions.Databases.Seeder;
 
 namespace SmartEduSolutions
 {
@@ -124,6 +127,8 @@ namespace SmartEduSolutions
             // All Register Services from extension 
 
             services.RegisterServices();
+
+            SeedRegister.IntializeSeedData(dbConnectionSettings.SEDBConnection);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -158,5 +163,6 @@ namespace SmartEduSolutions
                 endpoints.MapControllers();
             });
         }
+
     }
 }

@@ -19,6 +19,7 @@ namespace SmartEduSolutions.Databases.Seeder
             for (int i = 1; i <= 10; i++)
             {
                 var data = new Assignments();
+                data.IdAssignments = i;
                 data.Title = "Assignment "+i;
                 data.TotalMarks = "5"+i;
                 data.StartedAt = DateTime.Now.AddHours(i);

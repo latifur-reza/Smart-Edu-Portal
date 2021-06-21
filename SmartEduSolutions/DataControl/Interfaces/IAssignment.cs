@@ -8,7 +8,7 @@ namespace SmartEduSolutions.DataControl.Interfaces
 {
     public interface IAssignment
     {
-        Task<IEnumerable<AssignmentDto>> GetAssignmentList(int userId, int classroomId);
+        Task<IEnumerable<AssignmentDto>> GetAssignmentList(int userId, int assignmentId);
         Task<AssignmentDto> FindAssignment(int userId, int id);
         Task<int> UpdateAssignment(int id, AssignmentDto assignmentDto);
         Task<int> AddAssignment(AssignmentDto assignmentDto);

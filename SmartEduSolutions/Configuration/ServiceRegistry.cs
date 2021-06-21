@@ -19,6 +19,7 @@ namespace SmartEduSolutions.Configuration
             services.AddTransient<IUser, UserService>();
             services.AddTransient<IClassroom, ClassroomService>();
             services.AddTransient<IAssignment, AssignmentService>();
+            services.AddTransient<IQuestion, QuestionService>();
         }
     }
 }

@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 
 namespace SmartEduSolutions.DataControl.Services
 {
-    public class AssignmentService : IAssignment
+    public class QuestionService : IQuestion
     {
         private readonly SEDBContext _context;
-        private readonly ILogger<AssignmentService> _logger;
+        private readonly ILogger<QuestionService> _logger;
         private readonly IClassroom _classroomService;
 
-        public AssignmentService(SEDBContext context, ILogger<AssignmentService> logger, IClassroom classroomService)
+        public QuestionService(SEDBContext context, ILogger<QuestionService> logger, IClassroom classroomService)
         {
             _context = context;
             _logger = logger;
@@ -25,7 +25,7 @@ namespace SmartEduSolutions.DataControl.Services
         }
 
         #region Active list
-        public async Task<IEnumerable<AssignmentDto>> GetAssignmentList(int userId, int classroomId)
+        public async Task<IEnumerable<QuestionDto>> GetQuestionList(int userId, int classroomId, int assignmentId)
         {
             try
             {
@@ -35,18 +35,16 @@ namespace SmartEduSolutions.DataControl.Services
                     userCheck.Result.Role == Roles.Teacher ||
                     userCheck.Result.Role == Roles.Student))
                 {
-                    var data = _context.Assignments
-                                    .Where(x => x.Classrooms_IdClassrooms.Equals(classroomId))
-                                    .OrderBy(x => x.StartedAt)
-                                    .Select(x => new AssignmentDto
+                    var data = _context.Questions
+                                    .Where(x => x.Assignments_IdAssignments.Equals(assignmentId))
+                                    .OrderBy(x => x.IdQuestions)
+                                    .Select(x => new QuestionDto
                                     {
-                                        IdAssignments = x.IdAssignments,
-                                        Title = x.Title,
-                                        TotalMarks = x.TotalMarks,
-                                        StartedAt = x.StartedAt,
-                                        EndedAt = x.EndedAt,
+                                        IdQuestions = x.IdQuestions,
+                                        QuestionPart = x.QuestionPart,
+                                        Marks = x.Marks,
                                         IdClassrooms = x.Classrooms_IdClassrooms,
-                                        IdUsers = x.Users_IdUsers,
+                                        IdAssignments = x.Assignments_IdAssignments,
                                     });
 
                     return await Task.FromResult(data);
@@ -58,7 +56,7 @@ namespace SmartEduSolutions.DataControl.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError("Assignment Repository, Get Assignment List not found. " + ex);
+                _logger.LogError("Question Repository, Get Question List not found. " + ex);
                 throw ex;
             }
         }
@@ -66,22 +64,19 @@ namespace SmartEduSolutions.DataControl.Services
         #endregion
 
         #region Find by Id
-        public async Task<AssignmentDto> FindAssignment(int userId, int id)
+        public async Task<QuestionDto> FindQuestion(int userId, int id)
         {
             try
             {
-                var data = _context.Assignments
-                                    .Where(x => x.IdAssignments.Equals(id))
-                                    .OrderBy(x => x.StartedAt)
-                                    .Select(x => new AssignmentDto
+                var data = _context.Questions
+                                    .Where(x => x.IdQuestions.Equals(id))
+                                    .Select(x => new QuestionDto
                                     {
-                                        IdAssignments = x.IdAssignments,
-                                        Title = x.Title,
-                                        TotalMarks = x.TotalMarks,
-                                        StartedAt = x.StartedAt,
-                                        EndedAt = x.EndedAt,
+                                        IdQuestions = x.IdQuestions,
+                                        QuestionPart = x.QuestionPart,
+                                        Marks = x.Marks,
                                         IdClassrooms = x.Classrooms_IdClassrooms,
-                                        IdUsers = x.Users_IdUsers,
+                                        IdAssignments = x.Assignments_IdAssignments,
                                     })
                                     .FirstOrDefault();
 
@@ -96,11 +91,11 @@ namespace SmartEduSolutions.DataControl.Services
                 {
                     return null;
                 }
-                    
+
             }
             catch (Exception ex)
             {
-                _logger.LogError("Assignment Repository, Find Assignment not found. " + ex);
+                _logger.LogError("Question Repository, Find Question not found. " + ex);
                 throw ex;
             }
         }
@@ -108,36 +103,35 @@ namespace SmartEduSolutions.DataControl.Services
         #endregion
 
         #region Update data
-        public async Task<int> UpdateAssignment(int id, AssignmentDto assignmentDto)
+        public async Task<int> UpdateQuestion(int userId, int id, QuestionDto questionDto)
         {
             if (_context != null)
             {
                 try
                 {
-                    var assignment = await _context.Assignments.FindAsync(id);
-                    if (assignment == null)
+                    var currentTime = DateConverter.GetCurrentLocalTime();
+                    var question = await _context.Questions.FindAsync(id);
+                    if (question == null)
                     {
                         return 0;
                     }
-
-                    var userCheck = _classroomService.FindClassroom(assignmentDto.IdUsers, assignment.Classrooms_IdClassrooms);
+                    var userCheck = _classroomService.FindClassroom(userId, questionDto.IdClassrooms);
                     if (userCheck.Result.Role == Roles.Creator ||
                         userCheck.Result.Role == Roles.Teacher)
                     {
-                        assignment.Title = assignmentDto.Title;
-                        assignment.TotalMarks = assignmentDto.TotalMarks;
-                        assignment.StartedAt = assignmentDto.StartedAt;
-                        assignment.EndedAt = assignmentDto.EndedAt;
+                        question.QuestionPart = questionDto.QuestionPart;
+                        question.Marks = questionDto.Marks;
+                        question.UpdatedAt = currentTime;
 
                         await _context.SaveChangesAsync();
-                        return assignment.IdAssignments;
+                        return question.IdQuestions;
                     }
 
                     return 0;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Assignment Repository, Update Assignment not found. " + ex);
+                    _logger.LogError("Question Repository, Update Question not found. " + ex);
                 }
             }
             return 0;
@@ -146,32 +140,31 @@ namespace SmartEduSolutions.DataControl.Services
         #endregion
 
         #region Create New
-        public async Task<int> AddAssignment(AssignmentDto assignmentDto)
+        public async Task<int> AddQuestion(int userId, QuestionDto questionDto)
         {
             if (_context != null)
             {
                 try
                 {
-                    var userCheck = _classroomService.FindClassroom(assignmentDto.IdUsers, assignmentDto.IdClassrooms);
+                    var userCheck = _classroomService.FindClassroom(userId, questionDto.IdClassrooms);
                     if (userCheck.Result.Role == Roles.Creator ||
                         userCheck.Result.Role == Roles.Teacher)
                     {
                         var currentTime = DateConverter.GetCurrentLocalTime();
 
-                        Assignments assignments = new Assignments
+                        Questions questions = new Questions
                         {
-                            Title = assignmentDto.Title,
-                            TotalMarks = assignmentDto.TotalMarks,
-                            StartedAt = assignmentDto.StartedAt,
-                            EndedAt = assignmentDto.EndedAt,
+                            QuestionPart = questionDto.QuestionPart,
+                            Marks = questionDto.Marks,
                             CreatedAt = currentTime,
-                            Classrooms_IdClassrooms = assignmentDto.IdClassrooms,
-                            Users_IdUsers = assignmentDto.IdUsers,
+                            UpdatedAt = currentTime,
+                            Classrooms_IdClassrooms = questionDto.IdClassrooms,
+                            Assignments_IdAssignments = questionDto.IdAssignments,
                         };
-                        await _context.Assignments.AddAsync(assignments);
+                        await _context.Questions.AddAsync(questions);
                         await _context.SaveChangesAsync();
 
-                        return assignments.IdAssignments;
+                        return questions.IdQuestions;
                     }
                     else
                     {
@@ -180,7 +173,7 @@ namespace SmartEduSolutions.DataControl.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Assignment Repository, Add Assignment not found. " + ex);
+                    _logger.LogError("Question Repository, Add Question not found. " + ex);
                 }
             }
             return 0;
@@ -189,30 +182,32 @@ namespace SmartEduSolutions.DataControl.Services
         #endregion
 
         #region Permanently delete
-        public async Task<int> DeleteAssignment(int userId, int id)
+        public async Task<int> DeleteQuestion(int userId, int id)
         {
             if (_context != null)
             {
                 try
                 {
-                    var assignment = await _context.Assignments.FindAsync(id);
-                    if (assignment == null)
+                    var question = await _context.Questions.FindAsync(id);
+                    if (question == null)
                     {
                         return 0;
                     }
 
-                    if(assignment.Users_IdUsers != userId)
+                    var userCheck = _classroomService.FindClassroom(userId, question.Classrooms_IdClassrooms);
+                    if (userCheck.Result.Role == Roles.Creator ||
+                        userCheck.Result.Role == Roles.Teacher)
                     {
-                        return 0;
+                        _context.Questions.Remove(question);
+                        await _context.SaveChangesAsync();
+                        return question.IdQuestions;
                     }
 
-                    _context.Assignments.Remove(assignment);
-                    await _context.SaveChangesAsync();
-                    return assignment.IdAssignments;
+                    return 0;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Assignment Repository, Delete Assignment not found. " + ex);
+                    _logger.LogError("Question Repository, Delete Question not found. " + ex);
                 }
             }
             return 0;

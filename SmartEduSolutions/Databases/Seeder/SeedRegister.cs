@@ -49,6 +49,15 @@ namespace SmartEduSolutions.Databases.Seeder
                 }
                 context.SaveChanges();
 
+                var questionSeed = new QuestionSeed();
+                context.Database.EnsureCreated();
+                var questions = context.Questions.FirstOrDefault();
+                if (questions == null)
+                {
+                    context.Questions.AddRange(questionSeed.GetQuestion());
+                }
+                context.SaveChanges();
+
             }
         }
     }

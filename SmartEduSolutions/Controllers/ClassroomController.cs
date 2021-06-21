@@ -52,6 +52,33 @@ namespace SmartEduSolutions.Controllers
 
         #endregion
 
+        #region Find Classroom
+
+        // GET: api/v1.0/Classroom/find/5
+        [HttpGet]
+        [Route("find/{id}")]
+        public async Task<IActionResult> Find(int id)
+        {
+            try
+            {
+                int userId = int.Parse(User.Claims.First(x => x.Type == ClaimNames.UserId).Value.ToString());
+
+                var data = await _service.FindClassroom(userId, id);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Classroom Controller, Find not found. " + ex);
+                return NoContent();
+            }
+        }
+
+        #endregion
+
         #region Update data
 
         // PUT: api/v1.0/Classroom/update/5
